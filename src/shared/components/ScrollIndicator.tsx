@@ -12,7 +12,8 @@ const sections = [
   { id: "skills", label: "Skills", code: "03" },
   { id: "projects", label: "Proyectos", code: "04" },
   { id: "experience", label: "Experiencia", code: "05" },
-  { id: "contact", label: "Contacto", code: "06" },
+  { id: "comments", label: "Comentarios", code: "06" },
+  { id: "contact", label: "Contacto", code: "07" },
 ];
 
 export function ScrollIndicator({ onNavigate }: ScrollIndicatorProps) {
@@ -25,8 +26,10 @@ export function ScrollIndicator({ onNavigate }: ScrollIndicatorProps) {
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const maxScroll =
-        document.documentElement.scrollHeight - window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+      const winHeight = window.innerHeight;
+      const maxScroll = docHeight - winHeight;
+
       const p = maxScroll > 0 ? Math.min(1, Math.max(0, scrollY / maxScroll)) : 0;
       setProgress(p);
 
@@ -34,13 +37,25 @@ export function ScrollIndicator({ onNavigate }: ScrollIndicatorProps) {
         barRef.current.style.transform = `scaleX(${p})`;
       }
 
-      // Determinar la sección activa
-      const middleY = scrollY + window.innerHeight * 0.4;
+      // 1. Edge case: top of the page
+      if (scrollY < 120) {
+        setActiveSection("hero");
+        return;
+      }
+
+      // 2. Edge case: bottom of the page
+      if (scrollY + winHeight >= docHeight - 80) {
+        setActiveSection(sections[sections.length - 1].id);
+        return;
+      }
+
+      // 3. Precision detection using viewport boundaries
+      const targetLine = winHeight * 0.45;
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i].id);
         if (el) {
-          const top = el.offsetTop;
-          if (middleY >= top) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= targetLine && rect.bottom >= targetLine) {
             setActiveSection(sections[i].id);
             break;
           }
@@ -54,10 +69,12 @@ export function ScrollIndicator({ onNavigate }: ScrollIndicatorProps) {
     };
 
     window.addEventListener("scroll", onScrollThrottled, { passive: true });
+    window.addEventListener("resize", onScrollThrottled, { passive: true });
     handleScroll();
 
     return () => {
       window.removeEventListener("scroll", onScrollThrottled);
+      window.removeEventListener("resize", onScrollThrottled);
       cancelAnimationFrame(animId);
     };
   }, []);
@@ -82,17 +99,22 @@ export function ScrollIndicator({ onNavigate }: ScrollIndicatorProps) {
         </div>
       </div>
 
-      {/* 2. Riel lateral HUD */}
+      {/* 2. Riel lateral HUD a la derecha */}
       <aside
         aria-label="Navegación de secciones"
-        className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col items-end gap-3 font-mono text-xs select-none pointer-events-auto"
+        className="fixed right-3 md:right-6 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-end gap-2.5 font-mono text-xs select-none pointer-events-auto"
       >
-        <div className="flex items-center gap-1.5 text-[10px] text-fg/30 tracking-widest uppercase mb-1">
+        {/* Status header */}
+        <div className="flex items-center gap-1.5 text-[9px] text-fg/40 tracking-widest uppercase mb-0.5">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
           <span>NAV // {String(percentage).padStart(2, "0")}%</span>
         </div>
 
-        <div className="glass rounded-2xl px-2.5 py-4 flex flex-col gap-3.5 border border-fg/10 shadow-lg">
+        {/* HUD Navigation Rail Card */}
+        <div className="glass rounded-2xl px-2.5 py-3.5 flex flex-col gap-2.5 border border-fg/10 shadow-2xl relative backdrop-blur-xl">
+          {/* Vertical Connecting Rail Line */}
+          <div className="absolute right-[19px] top-6 bottom-6 w-[1px] bg-fg/10 pointer-events-none" />
+
           {sections.map((sec) => {
             const isActive = activeSection === sec.id;
             return (
@@ -100,24 +122,26 @@ export function ScrollIndicator({ onNavigate }: ScrollIndicatorProps) {
                 key={sec.id}
                 onClick={() => onNavigate(`#${sec.id}`)}
                 aria-label={`Ir a sección ${sec.label}`}
-                className="group flex items-center justify-end gap-2.5 cursor-pointer py-1 text-right focus:outline-none"
+                className="group flex items-center justify-end gap-2 cursor-pointer py-1 text-right focus:outline-none relative z-10"
               >
+                {/* Floating Section Label on hover or active */}
                 <span
-                  className={`text-[11px] font-mono tracking-wider transition-all duration-300 ${
+                  className={`text-[10px] font-mono tracking-wider transition-all duration-200 whitespace-nowrap ${
                     isActive
                       ? "text-accent font-semibold opacity-100 translate-x-0"
-                      : "text-fg/40 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
+                      : "text-fg/40 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0"
                   }`}
                 >
                   {sec.label}
                 </span>
 
+                {/* Tactical Dot with Outer Ping */}
                 <div className="relative flex items-center justify-center w-5 h-5">
                   <div
                     className={`rounded-full transition-all duration-300 ${
                       isActive
-                        ? "w-3 h-3 bg-accent shadow-[0_0_10px_var(--color-accent)] scale-110"
-                        : "w-1.5 h-1.5 bg-fg/30 group-hover:bg-fg/70 group-hover:scale-125"
+                        ? "w-2.5 h-2.5 bg-accent shadow-[0_0_12px_var(--color-accent)] scale-125"
+                        : "w-1.5 h-1.5 bg-fg/25 group-hover:bg-fg/80 group-hover:scale-125"
                     }`}
                   />
                   {isActive && (
@@ -129,7 +153,8 @@ export function ScrollIndicator({ onNavigate }: ScrollIndicatorProps) {
           })}
         </div>
 
-        <div className="text-[10px] text-fg/40 tracking-wider">
+        {/* Tactical Telemetry Altitude */}
+        <div className="text-[9px] text-fg/40 tracking-wider font-mono">
           ALT: <span className="text-accent">{percentage}k</span>
         </div>
       </aside>

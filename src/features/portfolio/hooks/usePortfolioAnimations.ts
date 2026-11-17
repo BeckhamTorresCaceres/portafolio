@@ -16,6 +16,7 @@ export function usePortfolioAnimations() {
 
   useEffect(() => {
     const lenis = new Lenis({ lerp: 0.085 });
+    (window as any).lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (t: number) => lenis.raf(t * 1000);
     gsap.ticker.add(tick);

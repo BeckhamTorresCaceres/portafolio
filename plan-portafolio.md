@@ -19,6 +19,7 @@
 | Animación / scroll | GSAP (ScrollTrigger) + Lenis | Scroll suave y animaciones ligadas al scroll |
 | Modelos | `.glb` + `gltfjsx` + compresión Draco/Meshopt | Modelos livianos convertidos a componentes |
 | Backend | Supabase (Postgres + Auth + Storage) con `@supabase/supabase-js` y `@supabase/ssr` | Datos, login del admin y archivos |
+| ORM / Migraciones | Prisma ORM (`@prisma/client` + `prisma`) | Modelado de datos, migraciones con `prisma migrate` y consultas tipadas |
 | Estilos | Tailwind CSS **(por definir)** | |
 | Debug | Leva, r3f-perf | Solo en desarrollo |
 | Despliegue | Vercel **(por definir)** | |
@@ -82,9 +83,13 @@ portafolio/
 └── styles/
 ```
 
-## 4.1 Supabase: datos, auth y archivos
+## 4.1 Base de datos (Supabase Postgres + Prisma ORM) y Archivos
 
-**Tablas (propuesta inicial)**
+**Modelado con Prisma (`prisma/schema.prisma`)**
+- Se utiliza Prisma como ORM para definir modelos (`Profile`, `Project`, `ProjectImage`, `Skill`, `Admin`, `Comment`), realizar migraciones estructuradas (`npx prisma migrate dev`) y ejecutar consultas con tipado estricto en el servidor.
+- Instancia única tipo singleton centralizada en `src/lib/prisma.ts`.
+
+**Tablas principales**
 
 | Tabla | Campos principales |
 |-------|--------------------|
@@ -209,3 +214,8 @@ portafolio/
 | 2026-11-16 | Definido el login: admin con cuenta propia, visitantes con Google y espacio de comentarios |
 | 2026-11-16 | Decidido no usar RLS; toda la seguridad se centraliza en Server Actions y middleware de Next.js |
 | 2026-11-16 | Integrado el portafolio 3D completo en Next.js (R3F, GSAP ScrollTrigger, Lenis, temas claro/oscuro) |
+| 2026-11-17 | Integrado Prisma ORM con schema de modelos (`Profile`, `Project`, `Skill`, `Admin`, `Comment`) y cliente singleton |
+| 2026-11-17 | Implementado sistema de Auth dual (Admin con correo/password en `/admin`, invitados solo con Google OAuth en `/`) y moderación de comentarios |
+| 2026-11-17 | Diseñada interfaz 3D y animaciones para el login (escena Three.js orbital, tarjeta con tilt 3D y brillo holográfico reactivo) |
+| 2026-11-17 | Implementadas animaciones cinemáticas de salida/descarte 3D (GSAP warp-out y desvanecimiento de fondo) al cerrar el login |
+| 2026-11-17 | Conexión exitosa a Supabase Postgres y sincronización de modelos Prisma (`Profile`, `Project`, `Comment`, etc.) |

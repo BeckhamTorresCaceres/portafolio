@@ -14,6 +14,7 @@ import {
   ContactSection,
   usePortfolioAnimations,
 } from "@/features/portfolio";
+import { CommentsSection } from "@/features/comments";
 import { FighterJetCrash, useThemeMode } from "@/features/theme-toggle";
 
 const Scene = dynamic(() => import("@/features/three"), { ssr: false });
@@ -35,8 +36,16 @@ export default function Home() {
     setYear(new Date().getFullYear());
   }, []);
 
-  const goto = (id: string) =>
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
+  const goto = (id: string) => {
+    const target = document.querySelector(id);
+    if (!target) return;
+    const lenis = (window as unknown as { lenis?: { scrollTo: (t: Element, opt?: object) => void } }).lenis;
+    if (lenis) {
+      lenis.scrollTo(target, { duration: 1.2 });
+    } else {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <div ref={rootRef} className="relative">
@@ -72,6 +81,7 @@ export default function Home() {
         <SkillsSection />
         <ProjectsSection trackRef={trackRef} />
         <ExperienceSection />
+        <CommentsSection />
         <ContactSection year={year} />
       </main>
     </div>

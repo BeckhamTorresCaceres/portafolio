@@ -64,6 +64,11 @@
 .cursor-blink { animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
+@keyframes scan {
+  0% { top: -2%; }
+  100% { top: 102%; }
+}
+
 /* Custom Slim Scrollbar */
 ::-webkit-scrollbar {
   width: 7px;

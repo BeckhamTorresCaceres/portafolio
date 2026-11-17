@@ -1,7 +1,7 @@
 import { JobItem, ProjectItem, SkillItem, StatItem } from "../types";
 
 export const developerProfile = {
-  name: "Tu Nombre",
+  name: "Beckham Torres Caceres",
   role: "Desarrollador Full-Stack",
   headline: "Código limpio, detalles cuidados.",
   description:

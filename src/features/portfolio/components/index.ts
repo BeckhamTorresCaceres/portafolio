@@ -1,4 +1,5 @@
 export { PortfolioHeader } from "./PortfolioHeader";
+export { AuthModal } from "./AuthModal";
 export { HeroSection } from "./HeroSection";
 export { AboutSection } from "./AboutSection";
 export { MarqueeSection } from "./MarqueeSection";
