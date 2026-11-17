@@ -62,6 +62,16 @@ model Skill {
   createdAt DateTime @default(now())
 }
 
+model Experience {
+  id          String   @id @default(uuid())
+  period      String
+  role        String
+  company     String
+  description String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
 model Admin {
   id        String   @id @default(uuid())
   userId    String   @unique

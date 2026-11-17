@@ -1,13 +1,17 @@
 "use client";
 
 import { RefObject } from "react";
-import { projects } from "../data/portfolioData";
+import { ProjectItem } from "../types";
 
 interface ProjectsSectionProps {
   trackRef: RefObject<HTMLDivElement | null>;
+  projects?: ProjectItem[];
 }
 
-export function ProjectsSection({ trackRef }: ProjectsSectionProps) {
+export function ProjectsSection({
+  trackRef,
+  projects = [],
+}: ProjectsSectionProps) {
   return (
     <section
       id="projects"
@@ -27,7 +31,7 @@ export function ProjectsSection({ trackRef }: ProjectsSectionProps) {
         {projects.map((project) => (
           <article
             key={project.n}
-            className="project-card glass rounded-3xl w-[80vw] md:w-[520px] h-[48vh] p-8 flex flex-col justify-between relative overflow-hidden group"
+            className="project-card glass rounded-3xl w-[80vw] md:w-[520px] h-[48vh] p-8 flex flex-col justify-between relative overflow-hidden group shrink-0"
           >
             <div
               className={`absolute -top-20 -right-20 w-72 h-72 rounded-full bg-gradient-to-br ${project.c} to-transparent blur-3xl`}
@@ -54,7 +58,6 @@ export function ProjectsSection({ trackRef }: ProjectsSectionProps) {
             </div>
           </article>
         ))}
-        <div className="w-[20vw]" />
       </div>
     </section>
   );

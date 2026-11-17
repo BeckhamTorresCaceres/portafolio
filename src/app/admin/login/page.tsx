@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { loginAdmin, AuthState } from "@/lib/auth/actions";
+import { createClient } from "@/lib/supabase/client";
 import { CyberCard3D } from "@/features/auth/components/CyberCard3D";
 
 const AuthScene3D = dynamic(
@@ -22,6 +23,26 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // If already authenticated, completely block the login view and redirect
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        const email = data.user.email?.toLowerCase();
+        const adminEmail = (
+          process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+          "beckhamjosethtorrescaceres@gmail.com"
+        ).toLowerCase();
+
+        if (email === adminEmail) {
+          router.replace("/admin");
+        } else {
+          router.replace("/");
+        }
+      }
+    });
+  }, [router]);
 
   const handleBackToPublic = (e: React.MouseEvent) => {
     e.preventDefault();

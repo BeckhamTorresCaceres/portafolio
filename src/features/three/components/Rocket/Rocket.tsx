@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { colors } from "@/theme/colors";
 import { scrollState } from "@/shared/lib/scrollState";
@@ -125,8 +125,11 @@ export function Rocket({ light }: RocketProps) {
   const legAngles = [0, 1, 2, 3].map((k) => (k * Math.PI) / 2);
   const finAngles = [0, 1, 2, 3].map((k) => Math.PI / 4 + (k * Math.PI) / 2);
 
+  const viewport = useThree((state) => state.viewport);
+  const baseScale = viewport.width < 5 ? 0.95 : 1.35;
+
   return (
-    <group ref={group} scale={0.82}>
+    <group ref={group} scale={baseScale}>
       <SceneEnvironment light={light} />
       <group position={[0, -0.9, 0]}>
         {/* 0 - first stage tank (soot at the base, cable raceway, brand stripe) */}

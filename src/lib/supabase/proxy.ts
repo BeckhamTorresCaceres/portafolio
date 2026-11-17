@@ -91,11 +91,19 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // If already logged in as admin and visiting /admin/login, redirect to /admin
-  if (pathname === "/admin/login" && isAdminAuthenticated) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    return NextResponse.redirect(url);
+  // Block /admin/login when already authenticated
+  if (pathname === "/admin/login") {
+    if (isAdminAuthenticated) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
+    if (user) {
+      // Client/visitor is already logged in -> block login, redirect to home
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

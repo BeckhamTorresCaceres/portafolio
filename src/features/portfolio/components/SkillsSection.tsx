@@ -1,9 +1,13 @@
 "use client";
 
 import { Tilt } from "@/shared/components/Tilt";
-import { skills } from "../data/portfolioData";
+import { SkillItem } from "../types";
 
-export function SkillsSection() {
+export function SkillsSection({
+  skills = [],
+}: {
+  skills?: SkillItem[];
+} = {}) {
   return (
     <section
       id="skills"

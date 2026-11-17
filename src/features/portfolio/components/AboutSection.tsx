@@ -1,9 +1,28 @@
 "use client";
 
-import { developerProfile, stats } from "../data/portfolioData";
+import { StatItem } from "../types";
 
-export function AboutSection() {
-  const { headline, bio } = developerProfile;
+const defaultStats: StatItem[] = [
+  { number: "4", label: "años exp." },
+  { number: "25", label: "proyectos" },
+  { number: "10", label: "OSS repos" },
+];
+
+export function AboutSection({
+  profile = {
+    headline: "Código limpio, detalles cuidados.",
+    bio: "Soy desarrollador con foco en arquitectura frontend y experiencias interactivas. Me gusta llevar una idea desde el diseño hasta producción, cuidando rendimiento, accesibilidad y mantenibilidad.",
+  },
+  stats = defaultStats,
+}: {
+  profile?: {
+    headline?: string;
+    bio?: string;
+  };
+  stats?: StatItem[];
+} = {}) {
+  const headline = profile.headline || "Código limpio, detalles cuidados.";
+  const bio = profile.bio || "Soy desarrollador con foco en arquitectura frontend y experiencias interactivas.";
 
   return (
     <section

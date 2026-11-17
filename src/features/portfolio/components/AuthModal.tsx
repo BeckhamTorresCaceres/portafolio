@@ -17,9 +17,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [state, formAction, isPending] = useActionState(loginAdmin, initialState);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isAdminSession, setIsAdminSession] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const email = data?.user?.email?.toLowerCase();
+      if (email && email === "beckhamjosethtorrescaceres@gmail.com") {
+        setIsAdminSession(true);
+      }
+    });
+  }, [isOpen]);
 
   // Entrance animation
   useEffect(() => {
@@ -140,6 +152,22 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               ✕
             </button>
           </div>
+
+          {/* Active Admin Session Quick Jump */}
+          {isAdminSession && (
+            <div className="p-3.5 my-3 rounded-xl border border-cyan-400/40 bg-cyan-950/40 text-center space-y-2">
+              <div className="flex items-center justify-center gap-2 text-cyan-300 text-xs font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span>Sesión activa como Administrador</span>
+              </div>
+              <a
+                href="/admin"
+                className="block w-full py-2 px-4 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs uppercase font-mono tracking-wider transition"
+              >
+                Ir al Centro de Mando (/admin) →
+              </a>
+            </div>
+          )}
 
           {/* Admin Section */}
           <div className="space-y-4 my-4">

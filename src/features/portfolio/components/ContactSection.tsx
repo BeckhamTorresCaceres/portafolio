@@ -1,13 +1,27 @@
 "use client";
 
-import { developerProfile } from "../data/portfolioData";
-
 interface ContactSectionProps {
   year: number;
+  profile?: {
+    name: string;
+    email: string;
+    socialLinks: { label: string; href: string }[];
+  };
 }
 
-export function ContactSection({ year }: ContactSectionProps) {
-  const { name, email, socialLinks } = developerProfile;
+export function ContactSection({
+  year,
+  profile = {
+    name: "Beckham Torres Caceres",
+    email: "beckhamjosethtorrescaceres@gmail.com",
+    socialLinks: [
+      { label: "github", href: "https://github.com/BeckhamTorresCaceres" },
+      { label: "linkedin", href: "#" },
+      { label: "twitter", href: "#" },
+    ],
+  },
+}: ContactSectionProps) {
+  const { name, email, socialLinks } = profile;
 
   return (
     <section

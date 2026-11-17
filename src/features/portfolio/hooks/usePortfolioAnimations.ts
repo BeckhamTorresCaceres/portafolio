@@ -107,14 +107,18 @@ export function usePortfolioAnimations() {
       // Scroll horizontal fijado (pinning) para Proyectos
       const track = trackRef.current;
       if (track) {
-        const dist = () => track.scrollWidth - window.innerWidth;
+        const getDist = () => {
+          const maxScroll = track.scrollWidth - window.innerWidth;
+          return maxScroll > 0 ? maxScroll + 96 : 0;
+        };
+
         const mainTween = gsap.to(track, {
-          x: () => -dist(),
+          x: () => -getDist(),
           ease: "none",
           scrollTrigger: {
             trigger: "#projects",
             start: "top top",
-            end: () => `+=${dist()}`,
+            end: () => `+=${Math.max(window.innerHeight * 1.5, getDist() * 1.2)}`,
             pin: true,
             scrub: 1,
             invalidateOnRefresh: true,
@@ -163,7 +167,12 @@ export function usePortfolioAnimations() {
       });
     }, rootRef);
 
+    const refreshTimer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 150);
+
     return () => {
+      clearTimeout(refreshTimer);
       ctx.revert();
       gsap.ticker.remove(tick);
       lenis.destroy();

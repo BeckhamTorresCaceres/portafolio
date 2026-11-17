@@ -1,13 +1,21 @@
 "use client";
 
-import { developerProfile } from "../data/portfolioData";
-
 interface HeroSectionProps {
   onNavigate: (id: string) => void;
+  profile?: {
+    name: string;
+    description: string;
+  };
 }
 
-export function HeroSection({ onNavigate }: HeroSectionProps) {
-  const { name, description } = developerProfile;
+export function HeroSection({
+  onNavigate,
+  profile = {
+    name: "Beckham Torres Caceres",
+    description: "Desarrollador Full-Stack. Construyo productos web rápidos, escalables y con experiencias interactivas en 3D.",
+  },
+}: HeroSectionProps) {
+  const { name, description } = profile;
 
   return (
     <section
@@ -40,27 +48,23 @@ export function HeroSection({ onNavigate }: HeroSectionProps) {
             </span>
           ))}
         </h1>
-        <p className="hero-fade mt-8 text-lg md:text-xl text-fg/60 max-w-xl">
+        <p className="hero-fade mt-8 text-lg md:text-xl text-fg/60 max-w-xl font-normal leading-relaxed">
           {description}
         </p>
-        <div className="hero-fade mt-10 flex gap-4 font-mono text-sm">
+        <div className="hero-fade mt-10 flex gap-4">
           <button
             onClick={() => onNavigate("#projects")}
-            className="px-6 py-3 rounded-full bg-accent text-on-accent font-medium hover:scale-105 transition-transform"
+            className="px-6 py-3 rounded-full bg-accent text-on-accent font-medium text-sm hover:scale-105 transition-transform cursor-pointer"
           >
-            ver proyectos
+            Ver proyectos
           </button>
           <button
             onClick={() => onNavigate("#contact")}
-            className="px-6 py-3 rounded-full glass hover:bg-fg/10 transition-colors"
+            className="px-6 py-3 rounded-full border border-fg/20 text-sm hover:border-fg/50 transition-colors cursor-pointer"
           >
-            contacto
+            Contacto
           </button>
         </div>
-      </div>
-      <div className="hero-fade absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-xs text-fg/40 flex flex-col items-center gap-2">
-        scroll
-        <span className="w-px h-10 bg-gradient-to-b from-fg/50 to-transparent" />
       </div>
     </section>
   );
