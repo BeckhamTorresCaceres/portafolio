@@ -219,3 +219,4 @@ portafolio/
 | 2026-11-17 | Diseñada interfaz 3D y animaciones para el login (escena Three.js orbital, tarjeta con tilt 3D y brillo holográfico reactivo) |
 | 2026-11-17 | Implementadas animaciones cinemáticas de salida/descarte 3D (GSAP warp-out y desvanecimiento de fondo) al cerrar el login |
 | 2026-11-17 | Conexión exitosa a Supabase Postgres y sincronización de modelos Prisma (`Profile`, `Project`, `Comment`, etc.) |
+| 2026-11-17 | Implementado sistema JWT completo para sesión Admin con Access Token (15m) y Refresh Token (7d) en cookies HTTP-only seguras |

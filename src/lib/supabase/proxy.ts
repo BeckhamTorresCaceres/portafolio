@@ -1,5 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  verifyAccessToken,
+  verifyRefreshToken,
+  signAccessToken,
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  ACCESS_TOKEN_MAX_AGE,
+} from "@/lib/auth/jwt";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -29,7 +37,38 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh auth token if expired
+  // 1. JWT Access & Refresh Token Validation for Admin
+  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
+  let isAdminAuthenticated = false;
+
+  if (accessToken) {
+    const adminPayload = await verifyAccessToken(accessToken);
+    if (adminPayload) {
+      isAdminAuthenticated = true;
+    }
+  }
+
+  // If Access Token expired, verify Refresh Token and rotate Access Token
+  if (!isAdminAuthenticated && refreshToken) {
+    const refreshPayload = await verifyRefreshToken(refreshToken);
+    if (refreshPayload) {
+      isAdminAuthenticated = true;
+      const newAccessToken = await signAccessToken(refreshPayload);
+
+      // Set fresh access token cookie in request and response
+      request.cookies.set(ACCESS_TOKEN_COOKIE, newAccessToken);
+      supabaseResponse.cookies.set(ACCESS_TOKEN_COOKIE, newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: ACCESS_TOKEN_MAX_AGE,
+      });
+    }
+  }
+
+  // 2. Refresh Supabase auth session (for visitors with Google OAuth)
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -37,26 +76,23 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const adminEmail = process.env.ADMIN_EMAIL;
 
+  // Fallback: If user is authenticated via Supabase as admin
+  if (!isAdminAuthenticated && user && adminEmail && user.email?.toLowerCase() === adminEmail.toLowerCase()) {
+    isAdminAuthenticated = true;
+  }
+
   // Protect /admin routes (except /admin/login)
   if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    if (!user) {
+    if (!isAdminAuthenticated) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
       url.searchParams.set("redirectedFrom", pathname);
       return NextResponse.redirect(url);
     }
-
-    // Only allow the designated admin email
-    if (adminEmail && user.email !== adminEmail) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      url.searchParams.set("error", "unauthorized");
-      return NextResponse.redirect(url);
-    }
   }
 
   // If already logged in as admin and visiting /admin/login, redirect to /admin
-  if (pathname === "/admin/login" && user && (!adminEmail || user.email === adminEmail)) {
+  if (pathname === "/admin/login" && isAdminAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin";
     return NextResponse.redirect(url);
