@@ -3,8 +3,8 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { loginAdmin, AuthState } from "@/lib/auth/actions";
-import { createClient } from "@/lib/supabase/client";
-import { signInWithGoogle, getAdminEmail } from "@/lib/auth/oauth";
+import { signInWithGoogle } from "@/lib/auth/oauth";
+import { getClientSession } from "@/lib/auth/client";
 import { CyberCard3D } from "@/features/auth/components/CyberCard3D";
 
 interface AuthModalProps {
@@ -25,10 +25,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   useEffect(() => {
     if (!isOpen) return;
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      const email = data?.user?.email?.toLowerCase();
-      if (email && email === getAdminEmail()) {
+    getClientSession().then((session) => {
+      if (session.isAdmin) {
         setIsAdminSession(true);
       }
     });

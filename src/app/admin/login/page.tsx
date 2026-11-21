@@ -5,8 +5,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { loginAdmin, AuthState } from "@/lib/auth/actions";
-import { createClient } from "@/lib/supabase/client";
-import { signInWithGoogle, getAdminEmail } from "@/lib/auth/oauth";
+import { signInWithGoogle } from "@/lib/auth/oauth";
+import { getClientSession } from "@/lib/auth/client";
 import { CyberCard3D } from "@/features/auth/components/CyberCard3D";
 
 const AuthScene3D = dynamic(
@@ -28,13 +28,9 @@ export default function AdminLoginPage() {
 
   // If already authenticated, completely block the login view and redirect
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        const email = data.user.email?.toLowerCase();
-        const adminEmail = getAdminEmail();
-
-        if (email === adminEmail) {
+    getClientSession().then((session) => {
+      if (session.user) {
+        if (session.isAdmin) {
           router.replace("/admin");
         } else {
           router.replace("/");
