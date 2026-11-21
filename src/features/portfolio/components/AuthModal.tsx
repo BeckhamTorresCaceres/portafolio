@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { loginAdmin, AuthState } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/client";
+import { signInWithGoogle, getAdminEmail } from "@/lib/auth/oauth";
 import { CyberCard3D } from "@/features/auth/components/CyberCard3D";
 
 interface AuthModalProps {
@@ -27,7 +28,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       const email = data?.user?.email?.toLowerCase();
-      if (email && email === "beckhamjosethtorrescaceres@gmail.com") {
+      if (email && email === getAdminEmail()) {
         setIsAdminSession(true);
       }
     });
@@ -106,13 +107,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true);
-      const supabase = createClient();
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
+      await signInWithGoogle("/");
     } catch (err) {
       console.error("Error al iniciar con Google:", err);
       setGoogleLoading(false);
