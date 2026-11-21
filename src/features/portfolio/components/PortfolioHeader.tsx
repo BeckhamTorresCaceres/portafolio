@@ -3,7 +3,7 @@
 import { RefObject, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthModal } from "./AuthModal";
-import { createClient } from "@/lib/supabase/client";
+import { getClientSession } from "@/lib/auth/client";
 
 interface PortfolioHeaderProps {
   onNavigate: (id: string) => void;
@@ -36,22 +36,14 @@ export function PortfolioHeader({
   const [authStatus, setAuthStatus] = useState<"guest" | "admin" | "visitor">("guest");
 
   useEffect(() => {
-    const supabase = createClient();
-
     const verifySession = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
+      const session = await getClientSession();
+      if (!session.user) {
         setAuthStatus("guest");
         return;
       }
 
-      const email = data.user.email?.toLowerCase();
-      const adminEmail = (
-        process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
-        "beckhamjosethtorrescaceres@gmail.com"
-      ).toLowerCase();
-
-      if (email === adminEmail) {
+      if (session.isAdmin) {
         setAuthStatus("admin");
       } else {
         setAuthStatus("visitor");
@@ -59,16 +51,6 @@ export function PortfolioHeader({
     };
 
     verifySession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      verifySession();
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const handleDevClick = () => {
