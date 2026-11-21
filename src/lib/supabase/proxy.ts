@@ -74,10 +74,14 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "beckhamjosethtorrescaceres@gmail.com"
+  ).toLowerCase();
 
   // Fallback: If user is authenticated via Supabase as admin
-  if (!isAdminAuthenticated && user && adminEmail && user.email?.toLowerCase() === adminEmail.toLowerCase()) {
+  if (!isAdminAuthenticated && user && user.email?.toLowerCase() === adminEmail) {
     isAdminAuthenticated = true;
   }
 

@@ -43,8 +43,12 @@ export async function loginAdmin(
     return { error: "Correo y contraseña requeridos." };
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail && email.trim().toLowerCase() !== adminEmail.trim().toLowerCase()) {
+  const adminEmail = (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "beckhamjosethtorrescaceres@gmail.com"
+  ).toLowerCase();
+  if (email.trim().toLowerCase() !== adminEmail) {
     return { error: "Acceso denegado: no tienes permisos de administrador." };
   }
 
@@ -158,9 +162,13 @@ export async function getCurrentSession() {
     return { user: null, isAdmin: false };
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "beckhamjosethtorrescaceres@gmail.com"
+  ).toLowerCase();
   const isAdmin = Boolean(
-    adminEmail && user.email?.toLowerCase() === adminEmail.toLowerCase()
+    user.email?.toLowerCase() === adminEmail
   );
 
   return { user, isAdmin };
