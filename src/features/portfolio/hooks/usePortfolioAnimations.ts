@@ -15,8 +15,13 @@ export function usePortfolioAnimations() {
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const lenis = new Lenis({ lerp: 0.085 });
-    (window as any).lenis = lenis;
+    const lenis = new Lenis({
+      lerp: 0.085,
+      touchMultiplier: 1.5,
+      wheelMultiplier: 1,
+      smoothWheel: true,
+    });
+    (window as unknown as { lenis?: Lenis }).lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (t: number) => lenis.raf(t * 1000);
     gsap.ticker.add(tick);
@@ -171,7 +176,13 @@ export function usePortfolioAnimations() {
       ScrollTrigger.refresh();
     }, 150);
 
+    const handleResize = () => {
+      ScrollTrigger.refresh();
+    };
+    window.addEventListener("resize", handleResize);
+
     return () => {
+      window.removeEventListener("resize", handleResize);
       clearTimeout(refreshTimer);
       ctx.revert();
       gsap.ticker.remove(tick);

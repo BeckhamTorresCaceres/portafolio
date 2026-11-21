@@ -12,13 +12,14 @@ interface SceneProps {
 
 export function Scene({ light }: SceneProps) {
   const { lighting: lc } = colors.three;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
       <Canvas
         camera={{ position: [0, 0, 6], fov: 50 }}
-        dpr={[1, 1.75]}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        dpr={isMobile ? [1, 1.3] : [1, 1.75]}
+        gl={{ antialias: !isMobile, alpha: true, powerPreference: "high-performance" }}
       >
         <ambientLight intensity={light ? 0.6 : 0.35} />
         <directionalLight

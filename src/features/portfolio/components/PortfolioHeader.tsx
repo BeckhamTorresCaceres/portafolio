@@ -32,6 +32,7 @@ export function PortfolioHeader({
 }: PortfolioHeaderProps) {
   const router = useRouter();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [authStatus, setAuthStatus] = useState<"guest" | "admin" | "visitor">("guest");
 
   useEffect(() => {
@@ -140,18 +141,61 @@ export function PortfolioHeader({
           ))}
         </nav>
 
-        <button
-          ref={themeBtnRef}
-          onClick={onThemeClick}
-          disabled={isCrashing}
-          aria-label="Cambiar tema"
-          className={`font-mono text-xs px-3 py-1.5 rounded-full border border-fg/30 text-fg/80 hover:text-fg transition-all cursor-pointer select-none ${
-            isCrashing ? "scale-95 border-red-500 text-red-400" : ""
-          }`}
-        >
-          {mounted ? (light ? "dark" : "light") : "theme"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            ref={themeBtnRef}
+            onClick={onThemeClick}
+            disabled={isCrashing}
+            aria-label="Cambiar tema"
+            className={`font-mono text-xs px-3 py-1.5 rounded-full border border-fg/30 text-fg/80 hover:text-fg transition-all cursor-pointer select-none ${
+              isCrashing ? "scale-95 border-red-500 text-red-400" : ""
+            }`}
+          >
+            {mounted ? (light ? "dark" : "light") : "theme"}
+          </button>
+
+          {/* Botón menú móvil */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Navegación móvil"
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded-full border border-fg/20 hover:border-fg/50 text-fg transition cursor-pointer text-xs"
+          >
+            {isMobileMenuOpen ? "✕" : "☰"}
+          </button>
+        </div>
       </header>
+
+      {/* Menú desplegable móvil */}
+      {isMobileMenuOpen && (
+        <>
+          <div
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 z-35 bg-black/60 backdrop-blur-sm md:hidden"
+          />
+          <div className="fixed inset-x-4 top-20 z-40 md:hidden glass rounded-2xl p-4 border border-fg/20 shadow-2xl space-y-2">
+            <div className="text-[10px] font-mono tracking-widest text-fg/40 uppercase pb-2 border-b border-fg/10">
+              SISTEMA // NAVEGACIÓN
+            </div>
+            <div className="flex flex-col gap-1">
+              {navSections.map(({ id, label }) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMobileMenuOpen(false);
+                    onNavigate(`#${id}`);
+                  }}
+                  className="text-xs font-mono text-fg/80 hover:text-accent py-2.5 px-3 rounded-lg hover:bg-fg/5 transition flex items-center justify-between"
+                >
+                  <span>{label}</span>
+                  <span className="text-[10px] text-fg/30">↗</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Terminal de Acceso Modal — Solo se monta y muestra si NO está logueado */}
       {authStatus === "guest" && (

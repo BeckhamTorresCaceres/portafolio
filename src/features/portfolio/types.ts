@@ -10,6 +10,9 @@ export interface ProjectItem {
   d: string;
   s: string[];
   c: string;
+  demoUrl?: string | null;
+  repoUrl?: string | null;
+  slug?: string;
 }
 
 export interface JobItem {

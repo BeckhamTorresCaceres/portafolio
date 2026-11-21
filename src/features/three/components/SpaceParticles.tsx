@@ -15,7 +15,9 @@ export function SpaceParticles({ light }: SpaceParticlesProps) {
   const { lighting: lc } = colors.three;
 
   const positions = useMemo(() => {
-    const a = new Float32Array(1400 * 3);
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const count = isMobile ? 650 : 1400;
+    const a = new Float32Array(count * 3);
     for (let i = 0; i < a.length; i++) {
       a[i] = (Math.random() - 0.5) * 22;
     }

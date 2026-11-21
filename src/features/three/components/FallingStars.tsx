@@ -19,21 +19,24 @@ export function FallingStars({ light }: FallingStarsProps) {
   const sprite = useMemo(makeSoftSprite, []);
   const { lighting: lc } = colors.three;
 
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const starCount = isMobile ? 22 : STARS;
+
   const data = useMemo(
     () =>
-      Array.from({ length: STARS }, (_, i) => ({
-        x: (rnd(i, 11) - 0.5) * 26,
+      Array.from({ length: starCount }, (_, i) => ({
+        x: (rnd(i, 11) - 0.5) * (isMobile ? 18 : 26),
         y: (rnd(i, 12) - 0.5) * 16,
         z: -2 - rnd(i, 13) * 6,
         speed: 3 + rnd(i, 14) * 6,
         len: 0.7 + rnd(i, 15) * 1.8,
       })),
-    []
+    [starCount, isMobile]
   );
 
-  const linePos = useMemo(() => new Float32Array(STARS * 6), []);
-  const lineCol = useMemo(() => new Float32Array(STARS * 6), []);
-  const headPos = useMemo(() => new Float32Array(STARS * 3), []);
+  const linePos = useMemo(() => new Float32Array(starCount * 6), [starCount]);
+  const lineCol = useMemo(() => new Float32Array(starCount * 6), [starCount]);
+  const headPos = useMemo(() => new Float32Array(starCount * 3), [starCount]);
   const dir = useMemo(() => new THREE.Vector2(-0.35, -1).normalize(), []);
   const head = useMemo(() => new THREE.Color(), []);
   const tail = useMemo(() => new THREE.Color(), []);
