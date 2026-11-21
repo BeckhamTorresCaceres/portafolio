@@ -1,0 +1,58 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - feat/*
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Lint, Types & Next.js Build
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "dummy-key"
+      SUPABASE_SERVICE_ROLE_KEY: "dummy-service-role"
+      ADMIN_EMAIL: "beckhamjosethtorrescaceres@gmail.com"
+      NEXT_PUBLIC_ADMIN_EMAIL: "beckhamjosethtorrescaceres@gmail.com"
+      JWT_ACCESS_SECRET: "dummy-ci-access-secret-minimum-32-chars-long"
+      JWT_REFRESH_SECRET: "dummy-ci-refresh-secret-minimum-32-chars-long"
+      GOOGLE_CLIENT_ID: "dummy-ci-google-client-id"
+      GOOGLE_CLIENT_SECRET: "dummy-ci-google-client-secret"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: TypeScript Type Check
+        run: npx tsc --noEmit
+
+      - name: ESLint Code Quality
+        run: npm run lint
+
+      - name: Next.js Production Build
+        run: npm run build

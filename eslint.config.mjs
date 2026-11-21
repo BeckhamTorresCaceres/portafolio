@@ -7,11 +7,15 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "react-hooks/immutability": "off",
       "react-hooks/purity": "off",
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/use-memo": "off",
       "react-hooks/refs": "off",
+      "react-hooks/exhaustive-deps": "warn",
+      "@next/next/no-location-assign-relative-destination": "warn",
     },
   },
   // Override default ignores of eslint-config-next.
