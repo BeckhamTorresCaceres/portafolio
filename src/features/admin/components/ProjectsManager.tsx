@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createProject, deleteProject, toggleProjectPublished } from "@/lib/admin/actions";
+import {
+  createProject,
+  updateProject,
+  deleteProject,
+  toggleProjectPublished,
+} from "@/lib/admin/actions";
 
-interface ProjectData {
+export interface ProjectData {
   id: string;
   title: string;
   slug: string;
@@ -20,8 +25,17 @@ interface ProjectData {
 
 export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectData | null>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  const isModalOpen = showCreateModal || editingProject !== null;
+
+  const closeModal = () => {
+    setShowCreateModal(false);
+    setEditingProject(null);
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,12 +44,18 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
     const formData = new FormData(form);
 
     startTransition(async () => {
-      const res = await createProject(formData);
+      let res;
+      if (editingProject) {
+        res = await updateProject(editingProject.id, formData);
+      } else {
+        res = await createProject(formData);
+      }
+
       if (res?.error) {
         setError(res.error);
       } else {
         form.reset();
-        setShowCreateModal(false);
+        closeModal();
       }
     });
   };
@@ -65,7 +85,11 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
         </div>
 
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setError(null);
+            setEditingProject(null);
+            setShowCreateModal(true);
+          }}
           className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs uppercase tracking-wider transition cursor-pointer shadow-lg shadow-cyan-500/20"
         >
           + Agregar Proyecto
@@ -77,7 +101,10 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
         <div className="p-12 text-center rounded-2xl border border-dashed border-white/10 bg-slate-900/20">
           <p className="text-sm text-white/40 font-mono">No hay proyectos registrados aún.</p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => {
+              setError(null);
+              setShowCreateModal(true);
+            }}
             className="mt-3 text-xs text-cyan-400 font-mono hover:underline cursor-pointer"
           >
             Crea el primero haciendo clic aquí
@@ -151,33 +178,63 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   )}
                 </div>
 
-                <button
-                  onClick={() => handleDelete(p.id, p.title)}
-                  disabled={isPending}
-                  className="text-rose-400/70 hover:text-rose-300 transition cursor-pointer"
-                >
-                  Eliminar
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError(null);
+                      setShowCreateModal(false);
+                      setEditingProject(p);
+                    }}
+                    disabled={isPending}
+                    className="text-cyan-400 hover:text-cyan-300 transition cursor-pointer flex items-center gap-1 font-semibold"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                    Editar
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(p.id, p.title)}
+                    disabled={isPending}
+                    className="text-rose-400/70 hover:text-rose-300 transition cursor-pointer"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal Crear Proyecto */}
-      {showCreateModal && (
+      {/* Modal Crear / Editar Proyecto */}
+      {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div
-            onClick={() => setShowCreateModal(false)}
+            onClick={closeModal}
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
           />
 
           <div className="relative w-full max-w-lg p-6 sm:p-8 rounded-2xl border border-white/10 bg-slate-900 shadow-2xl z-10 space-y-5 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="text-lg font-bold text-white font-space">Nuevo Proyecto</h3>
+              <h3 className="text-lg font-bold text-white font-space">
+                {editingProject ? `Editar Proyecto: ${editingProject.title}` : "Nuevo Proyecto"}
+              </h3>
               <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-white/40 hover:text-white transition font-mono"
+                onClick={closeModal}
+                className="text-white/40 hover:text-white transition font-mono cursor-pointer"
               >
                 ✕
               </button>
@@ -189,7 +246,11 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
               </p>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              key={editingProject ? editingProject.id : "new"}
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[11px] font-mono text-white/70 block">
@@ -199,6 +260,7 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                     type="text"
                     name="title"
                     required
+                    defaultValue={editingProject?.title ?? ""}
                     placeholder="Nebula Dashboard"
                     className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-white/5 text-white placeholder-white/20 focus:outline-none focus:border-cyan-400 font-mono"
                   />
@@ -211,6 +273,7 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   <input
                     type="text"
                     name="slug"
+                    defaultValue={editingProject?.slug ?? ""}
                     placeholder="nebula-dashboard"
                     className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-white/5 text-white placeholder-white/20 focus:outline-none focus:border-cyan-400 font-mono"
                   />
@@ -225,6 +288,7 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   name="description"
                   required
                   rows={2}
+                  defaultValue={editingProject?.description ?? ""}
                   placeholder="Panel en tiempo real con WebSockets y WebGL..."
                   className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-white/5 text-white placeholder-white/20 focus:outline-none focus:border-cyan-400 font-mono resize-none"
                 />
@@ -238,6 +302,7 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   type="text"
                   name="stack"
                   required
+                  defaultValue={editingProject ? editingProject.stack.join(", ") : ""}
                   placeholder="Next.js, Three.js, PostgreSQL, Tailwind"
                   className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-white/5 text-white placeholder-white/20 focus:outline-none focus:border-cyan-400 font-mono"
                 />
@@ -251,6 +316,7 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   <input
                     type="url"
                     name="demoUrl"
+                    defaultValue={editingProject?.demoUrl ?? ""}
                     placeholder="https://..."
                     className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-white/5 text-white placeholder-white/20 focus:outline-none focus:border-cyan-400 font-mono"
                   />
@@ -263,6 +329,7 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   <input
                     type="url"
                     name="repoUrl"
+                    defaultValue={editingProject?.repoUrl ?? ""}
                     placeholder="https://github.com/..."
                     className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-white/5 text-white placeholder-white/20 focus:outline-none focus:border-cyan-400 font-mono"
                   />
@@ -277,7 +344,7 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   <input
                     type="number"
                     name="order"
-                    defaultValue={projects.length + 1}
+                    defaultValue={editingProject ? editingProject.order : projects.length + 1}
                     className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-white/5 text-white focus:outline-none focus:border-cyan-400 font-mono"
                   />
                 </div>
@@ -287,12 +354,12 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                     type="checkbox"
                     id="published"
                     name="published"
-                    defaultChecked
+                    defaultChecked={editingProject ? editingProject.published : true}
                     className="w-4 h-4 rounded border-white/20 text-cyan-500 focus:ring-0 cursor-pointer"
                   />
                   <label
                     htmlFor="published"
-                    className="text-xs font-mono text-white/80 cursor-pointer"
+                    className="text-xs font-mono text-white/80 cursor-pointer select-none"
                   >
                     Publicar de inmediato
                   </label>
@@ -302,8 +369,8 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
               <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-mono text-white/50 hover:text-white transition"
+                  onClick={closeModal}
+                  className="px-4 py-2 rounded-lg text-xs font-mono text-white/50 hover:text-white transition cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -312,7 +379,13 @@ export function ProjectsManager({ projects }: { projects: ProjectData[] }) {
                   disabled={isPending}
                   className="px-5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs uppercase tracking-wider transition disabled:opacity-50 cursor-pointer"
                 >
-                  {isPending ? "Guardando..." : "Guardar Proyecto"}
+                  {isPending
+                    ? editingProject
+                      ? "Actualizando..."
+                      : "Guardando..."
+                    : editingProject
+                    ? "Guardar Cambios"
+                    : "Guardar Proyecto"}
                 </button>
               </div>
             </form>

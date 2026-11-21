@@ -131,8 +131,16 @@ export async function updateProject(id: string, formData: FormData) {
     revalidatePath("/");
     revalidatePath("/admin");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error al actualizar proyecto:", err);
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: string }).code === "P2002"
+    ) {
+      return { error: `Ya existe un proyecto con el slug "${slug}". Elige otro título o slug.` };
+    }
     return { error: "No se pudo actualizar el proyecto." };
   }
 }

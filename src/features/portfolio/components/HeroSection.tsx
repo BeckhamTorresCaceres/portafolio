@@ -28,11 +28,11 @@ export function HeroSection({
           <span className="cursor-blink">_</span>
         </p>
         <h1
-          className="text-6xl md:text-8xl font-bold leading-[0.95] tracking-tight"
+          className="text-4xl sm:text-6xl md:text-8xl font-bold leading-[1.05] sm:leading-[0.95] tracking-tight"
           style={{ perspective: 600 }}
         >
           {["Hola, soy", name].map((line, li) => (
-            <span key={li} className="block overflow-hidden pb-2">
+            <span key={li} className="block overflow-hidden pb-1 sm:pb-2">
               {line.split("").map((ch, i) => (
                 <span
                   key={i}
@@ -48,19 +48,19 @@ export function HeroSection({
             </span>
           ))}
         </h1>
-        <p className="hero-fade mt-8 text-lg md:text-xl text-fg/60 max-w-xl font-normal leading-relaxed">
+        <p className="hero-fade mt-6 sm:mt-8 text-base sm:text-lg md:text-xl text-fg/60 max-w-xl font-normal leading-relaxed">
           {description}
         </p>
-        <div className="hero-fade mt-10 flex gap-4">
+        <div className="hero-fade mt-8 sm:mt-10 flex flex-wrap gap-3 sm:gap-4 font-mono text-sm">
           <button
             onClick={() => onNavigate("#projects")}
-            className="px-6 py-3 rounded-full bg-accent text-on-accent font-medium text-sm hover:scale-105 transition-transform cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 rounded-full bg-accent text-on-accent font-medium text-sm hover:scale-105 transition-transform cursor-pointer text-center"
           >
             Ver proyectos
           </button>
           <button
             onClick={() => onNavigate("#contact")}
-            className="px-6 py-3 rounded-full border border-fg/20 text-sm hover:border-fg/50 transition-colors cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 rounded-full border border-fg/20 text-sm hover:border-fg/50 transition-colors cursor-pointer text-center"
           >
             Contacto
           </button>

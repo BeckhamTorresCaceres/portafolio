@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { ScrollIndicator } from "@/shared";
+import { ScrollIndicator, AppLoader } from "@/shared";
 import {
   PortfolioHeader,
   HeroSection,
@@ -31,6 +31,7 @@ interface PortfolioClientProps {
 
 export function PortfolioClient({ initialData }: PortfolioClientProps) {
   const [year, setYear] = useState<number>(2026);
+  const [loadingComplete, setLoadingComplete] = useState(false);
   const { rootRef, trackRef } = usePortfolioAnimations();
   const {
     light,
@@ -94,6 +95,11 @@ export function PortfolioClient({ initialData }: PortfolioClientProps) {
         <CommentsSection />
         <ContactSection year={year} profile={initialData.profile} />
       </main>
+
+      {/* Cyber Aerospace Initial Telemetry Loader */}
+      {!loadingComplete && (
+        <AppLoader isInitialLoad onComplete={() => setLoadingComplete(true)} />
+      )}
     </div>
   );
 }

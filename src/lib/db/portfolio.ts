@@ -55,6 +55,9 @@ export async function getPublicProjects(): Promise<ProjectItem[]> {
     d: p.description,
     s: p.stack,
     c: GRADIENT_COLORS[idx % GRADIENT_COLORS.length],
+    demoUrl: p.demoUrl,
+    repoUrl: p.repoUrl,
+    slug: p.slug,
   }));
 }
 

@@ -62,19 +62,24 @@ export function Rocket({ light }: RocketProps) {
     const built = clamp01((p / ASSEMBLE_END - 0.95) * 20);
     rocketState.built = built;
 
-    const tx = Math.cos(p * Math.PI * 3) * 2.3;
+    const isMobile = state.viewport.width < 5.5;
+    const xAmp = isMobile ? 0.85 : 2.3;
+    const targetScale = isMobile ? 0.6 : 0.82;
+
+    const tx = Math.cos(p * Math.PI * 3) * xAmp;
     const ty = Math.cos(p * Math.PI * 2) * 0.4 + built * Math.sin(t * 1.5) * 0.06;
-    const tz = -Math.abs(Math.sin(p * Math.PI * 2)) * 1.5;
+    const tz = -Math.abs(Math.sin(p * Math.PI * 2)) * (isMobile ? 1.0 : 1.5);
 
     const g = group.current;
     if (!g) return;
 
+    g.scale.setScalar(THREE.MathUtils.damp(g.scale.x, targetScale, 3, dt));
     g.position.x = THREE.MathUtils.damp(g.position.x, tx, 3, dt);
     g.position.y = THREE.MathUtils.damp(g.position.y, ty, 3, dt);
     g.position.z = THREE.MathUtils.damp(g.position.z, tz, 3, dt);
     g.rotation.y = THREE.MathUtils.damp(
       g.rotation.y,
-      p * Math.PI * 4 + m.x * 0.5,
+      p * Math.PI * 4 + m.x * (isMobile ? 0.25 : 0.5),
       3,
       dt
     );

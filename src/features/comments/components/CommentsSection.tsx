@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleLoginButton } from "./GoogleLoginButton";
@@ -21,7 +21,6 @@ export function CommentsSection({ projectId }: { projectId?: string }) {
   const [user, setUser] = useState<User | null>(null);
   const [comments, setComments] = useState<CommentData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPending, startTransition] = useTransition();
 
   const loadComments = useCallback(async () => {
     try {
@@ -66,24 +65,24 @@ export function CommentsSection({ projectId }: { projectId?: string }) {
   );
 
   return (
-    <section id="comments" className="relative py-24 px-6 md:px-12 max-w-4xl mx-auto">
-      <div className="space-y-4 mb-8">
+    <section id="comments" className="relative py-16 sm:py-24 px-4 sm:px-6 md:px-12 max-w-4xl mx-auto">
+      <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
         <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           <span className="text-xs font-mono uppercase tracking-widest text-cyan-400">
             Feedbacks & Mensajes
           </span>
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white font-space">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-space">
           Comentarios de la Comunidad
         </h2>
-        <p className="text-sm text-white/50 max-w-xl">
+        <p className="text-xs sm:text-sm text-white/50 max-w-xl leading-relaxed">
           Inicia sesión con tu cuenta de Google para dejar tus impresiones, dudas o feedback sobre los proyectos y el portafolio.
         </p>
       </div>
 
       {/* Auth State & Form Container */}
-      <div className="p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl mb-10 shadow-2xl">
+      <div className="p-4 sm:p-6 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl mb-8 sm:mb-10 shadow-2xl">
         {user ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-white/5">
