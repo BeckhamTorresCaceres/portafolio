@@ -8,8 +8,10 @@ import {
   signRefreshToken,
   verifyAccessToken,
   verifyRefreshToken,
+  verifyVisitorToken,
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
+  VISITOR_TOKEN_COOKIE,
   ACCESS_TOKEN_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
   AdminJWTPayload,
@@ -43,8 +45,12 @@ export async function loginAdmin(
     return { error: "Correo y contraseña requeridos." };
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  if (adminEmail && email.trim().toLowerCase() !== adminEmail.trim().toLowerCase()) {
+  const adminEmail = (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "beckhamjosethtorrescaceres@gmail.com"
+  ).toLowerCase();
+  if (email.trim().toLowerCase() !== adminEmail) {
     return { error: "Acceso denegado: no tienes permisos de administrador." };
   }
 
@@ -91,18 +97,29 @@ export async function loginAdmin(
 }
 
 export async function logout() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-
   const cookieStore = await cookies();
   cookieStore.delete(ACCESS_TOKEN_COOKIE);
   cookieStore.delete(REFRESH_TOKEN_COOKIE);
+  cookieStore.delete(VISITOR_TOKEN_COOKIE);
+
+  try {
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+  } catch {
+    // Supabase auth not used
+  }
 
   redirect("/");
 }
 
 export async function getCurrentSession() {
-  const cookieStore = await cookies();
+  let cookieStore;
+  try {
+    cookieStore = await cookies();
+  } catch {
+    return { user: null, isAdmin: false };
+  }
+
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
   const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
 
@@ -113,7 +130,7 @@ export async function getCurrentSession() {
       const adminUser: SessionUser = {
         id: adminPayload.sub,
         email: adminPayload.email,
-        user_metadata: { full_name: "Administrador" },
+        user_metadata: { full_name: "Administrador", name: "Administrador" },
       };
       return {
         user: adminUser,
@@ -139,7 +156,7 @@ export async function getCurrentSession() {
       const adminUser: SessionUser = {
         id: adminPayload.sub,
         email: adminPayload.email,
-        user_metadata: { full_name: "Administrador" },
+        user_metadata: { full_name: "Administrador", name: "Administrador" },
       };
       return {
         user: adminUser,
@@ -148,20 +165,47 @@ export async function getCurrentSession() {
     }
   }
 
-  // 3. Fallback to Supabase Visitor session (for Google comments)
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { user: null, isAdmin: false };
+  // 3. Verify Visitor JWT Token (Native Google OAuth)
+  const visitorToken = cookieStore.get(VISITOR_TOKEN_COOKIE)?.value;
+  if (visitorToken) {
+    const visitorPayload = await verifyVisitorToken(visitorToken);
+    if (visitorPayload) {
+      const visitorUser: SessionUser = {
+        id: visitorPayload.sub,
+        email: visitorPayload.email,
+        user_metadata: {
+          full_name: visitorPayload.name,
+          name: visitorPayload.name,
+          avatar_url: visitorPayload.picture,
+          picture: visitorPayload.picture,
+        },
+      };
+      return {
+        user: visitorUser,
+        isAdmin: false,
+      };
+    }
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const isAdmin = Boolean(
-    adminEmail && user.email?.toLowerCase() === adminEmail.toLowerCase()
-  );
+  // 4. Fallback to Supabase Visitor session (if any legacy session exists)
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  return { user, isAdmin };
+    if (user) {
+      const adminEmail = (
+        process.env.ADMIN_EMAIL ||
+        process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+        "beckhamjosethtorrescaceres@gmail.com"
+      ).toLowerCase();
+      const isAdmin = Boolean(user.email?.toLowerCase() === adminEmail);
+      return { user, isAdmin };
+    }
+  } catch {
+    // Ignore Supabase error
+  }
+
+  return { user: null, isAdmin: false };
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import type { User } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
+import { getClientSession, clientLogout } from "@/lib/auth/client";
+import type { SessionUser } from "@/lib/auth/actions";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 import { CommentForm } from "./CommentForm";
 import { CommentItem } from "./CommentItem";
@@ -18,7 +18,8 @@ interface CommentData {
 }
 
 export function CommentsSection({ projectId }: { projectId?: string }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [comments, setComments] = useState<CommentData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,37 +33,17 @@ export function CommentsSection({ projectId }: { projectId?: string }) {
   }, [projectId]);
 
   useEffect(() => {
-    const supabase = createClient();
-
-    // Check active session
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
-
-    // Listen for auth changes (login with Google, logout, etc.)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    getClientSession().then((session) => {
+      setUser(session.user);
+      setIsAdmin(session.isAdmin);
     });
 
     loadComments();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [loadComments]);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
+    await clientLogout();
   };
-
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-  const isAdmin = Boolean(
-    adminEmail && user?.email?.toLowerCase() === adminEmail.toLowerCase()
-  );
 
   return (
     <section id="comments" className="relative py-16 sm:py-24 px-4 sm:px-6 md:px-12 max-w-4xl mx-auto">

@@ -3,9 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   verifyAccessToken,
   verifyRefreshToken,
+  verifyVisitorToken,
   signAccessToken,
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
+  VISITOR_TOKEN_COOKIE,
   ACCESS_TOKEN_MAX_AGE,
 } from "@/lib/auth/jwt";
 
@@ -68,16 +70,36 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // 2. Refresh Supabase auth session (for visitors with Google OAuth)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // 2. Visitor Token check (Native Google OAuth)
+  const visitorToken = request.cookies.get(VISITOR_TOKEN_COOKIE)?.value;
+  let isVisitorAuthenticated = false;
+  if (visitorToken) {
+    const visitorPayload = await verifyVisitorToken(visitorToken);
+    if (visitorPayload) {
+      isVisitorAuthenticated = true;
+    }
+  }
+
+  // 3. Fallback Supabase auth session check
+  let user = null;
+  try {
+    const {
+      data: { user: supabaseUser },
+    } = await supabase.auth.getUser();
+    user = supabaseUser;
+  } catch {
+    // Supabase auth inactive
+  }
 
   const pathname = request.nextUrl.pathname;
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = (
+    process.env.ADMIN_EMAIL ||
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL ||
+    "beckhamjosethtorrescaceres@gmail.com"
+  ).toLowerCase();
 
   // Fallback: If user is authenticated via Supabase as admin
-  if (!isAdminAuthenticated && user && adminEmail && user.email?.toLowerCase() === adminEmail.toLowerCase()) {
+  if (!isAdminAuthenticated && user && user.email?.toLowerCase() === adminEmail) {
     isAdminAuthenticated = true;
   }
 
@@ -98,7 +120,7 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
-    if (user) {
+    if (isVisitorAuthenticated || user) {
       // Client/visitor is already logged in -> block login, redirect to home
       const url = request.nextUrl.clone();
       url.pathname = "/";
